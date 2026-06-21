@@ -25,9 +25,9 @@ from .entities import (
     SymbolVersion,
     User,
 )
-from .enums import ProcessingStatus
+from .enums import ProcessingStage, ProcessingStatus
 from .events import DomainEvent
-from .value_objects import BBox, Classification, OcrToken
+from .value_objects import BBox, ClaimedTask, Classification, OcrToken
 
 
 # --------------------------------------------------------------------------- repositories
@@ -171,7 +171,46 @@ class ObjectStore(ABC):
 
 class EventPublisher(ABC):
     @abstractmethod
-    def publish(self, event: DomainEvent) -> None: ...
+    async def publish(self, event: DomainEvent) -> None: ...
+
+
+class TaskQueue(ABC):
+    """Durable job queue backed by Postgres (ADR 0005). The same abstraction would be
+    satisfied by a broker adapter, so the worker and enqueuer never depend on the transport."""
+
+    @abstractmethod
+    async def enqueue(
+        self,
+        document_id: UUID,
+        stage: ProcessingStage,
+        *,
+        max_attempts: int,
+        run_after_seconds: float = 0.0,
+        payload: dict[str, object] | None = None,
+    ) -> None:
+        """Insert (idempotently per document+stage) a task to run at/after the given delay."""
+        ...
+
+    @abstractmethod
+    async def claim_batch(
+        self, worker_id: str, *, limit: int, visibility_timeout_seconds: int
+    ) -> list[ClaimedTask]:
+        """Atomically lease up to ``limit`` due tasks (FOR UPDATE SKIP LOCKED)."""
+        ...
+
+    @abstractmethod
+    async def mark_succeeded(self, task_id: UUID) -> None: ...
+
+    @abstractmethod
+    async def mark_retry(self, task_id: UUID, *, error: str, run_after_seconds: float) -> None: ...
+
+    @abstractmethod
+    async def mark_dead(self, task_id: UUID, *, error: str) -> None: ...
+
+    @abstractmethod
+    async def reclaim_expired(self, *, visibility_timeout_seconds: int) -> int:
+        """Return expired leases (crashed workers) to the pending pool. Returns count reclaimed."""
+        ...
 
 
 # --------------------------------------------------------------------------- compute engines

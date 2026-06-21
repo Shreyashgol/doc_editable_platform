@@ -197,6 +197,31 @@ class RelationshipModel(UUIDMixin, TimestampMixin, Base):
     properties: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)
 
 
+class PipelineTaskModel(UUIDMixin, TimestampMixin, Base):
+    """Durable job-queue row (ADR 0005). One row per (document, stage); retries reuse the row."""
+
+    __tablename__ = "pipeline_tasks"
+    __table_args__ = (
+        UniqueConstraint("document_id", "stage", name="uq_task_doc_stage"),
+        # The hot path: find due, pending tasks ordered by run_after.
+        Index("ix_tasks_claim", "status", "run_after"),
+        Index("ix_tasks_locked", "locked_at"),
+    )
+
+    document_id: Mapped[UUID] = mapped_column(
+        ForeignKey("documents.id", ondelete="CASCADE"), nullable=False
+    )
+    stage: Mapped[str] = mapped_column(String(32), nullable=False)
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default="pending")
+    attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    max_attempts: Mapped[int] = mapped_column(Integer, default=5, nullable=False)
+    run_after: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    locked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    locked_by: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    payload: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)
+
+
 class AuditLogModel(UUIDMixin, TimestampMixin, Base):
     __tablename__ = "audit_logs"
     __table_args__ = (

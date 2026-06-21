@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from uuid import UUID
 
-from .enums import ClassificationMethod, SymbolType
+from .enums import ClassificationMethod, ProcessingStage, SymbolType
 
 
 @dataclass(frozen=True, slots=True)
@@ -102,6 +103,22 @@ class OcrToken:
     @property
     def centroid(self) -> Centroid:
         return self.bbox.centroid
+
+
+@dataclass(frozen=True, slots=True)
+class ClaimedTask:
+    """A unit of work leased from the Postgres queue for a worker to execute (ADR 0005)."""
+
+    task_id: UUID
+    document_id: UUID
+    stage: ProcessingStage
+    attempts: int
+    max_attempts: int
+    payload: dict[str, object]
+
+    @property
+    def is_last_attempt(self) -> bool:
+        return self.attempts >= self.max_attempts
 
 
 @dataclass(frozen=True, slots=True)

@@ -9,7 +9,7 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field, PostgresDsn, RedisDsn, field_validator
+from pydantic import Field, PostgresDsn, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -57,14 +57,15 @@ class Settings(BaseSettings):
     # disable it when SSL/pooling is in play. Set APP_DB_REQUIRE_SSL=true for Neon.
     db_require_ssl: bool = False
 
-    # --- Redis / Celery ---
-    redis_url: RedisDsn = Field(default="redis://localhost:6379/0")  # type: ignore[arg-type]
-    celery_broker_url: RedisDsn = Field(default="redis://localhost:6379/1")  # type: ignore[arg-type]
-    celery_result_backend: RedisDsn = Field(default="redis://localhost:6379/2")  # type: ignore[arg-type]
+    # --- Postgres-backed job queue (replaces Redis/Celery; see ADR 0005) ---
     task_max_retries: int = 5
     task_retry_backoff_base_seconds: int = 2
-    task_soft_time_limit_seconds: int = 240
-    task_hard_time_limit_seconds: int = 300
+    # How long a claimed task may run before its lease is considered expired and it becomes
+    # eligible for re-claim by another worker (crash recovery).
+    queue_visibility_timeout_seconds: int = 300
+    queue_poll_interval_seconds: float = 1.0
+    queue_batch_size: int = 5
+    worker_concurrency: int = 4
 
     # --- Object storage (MinIO / S3) ---
     s3_endpoint_url: str | None = "http://localhost:9000"

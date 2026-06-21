@@ -16,10 +16,13 @@ PDF → Extracted Symbols → Structured Objects → Editable Properties → Sea
 ## Architecture at a glance
 
 ```
-React (Konva canvas) → FastAPI gateway → Redis/Celery queue
-        → Worker pipeline (pdf → ocr → classify → embed → graph)
+React (Konva canvas) → FastAPI gateway → Postgres-backed job queue (FOR UPDATE SKIP LOCKED)
+        → Worker pipeline (validate → pdf → ocr → classify → embed → graph)
         → PostgreSQL + pgvector  ·  MinIO/S3 object storage
 ```
+
+> The async pipeline runs on a **durable Postgres job queue** (no Redis/Celery) — see
+> [ADR 0005](docs/adr/0005-postgres-job-queue-supersedes-celery.md), which supersedes ADR 0003.
 
 Built on Clean Architecture + DDD: a framework-free **domain** core, **application** use cases,
 **infrastructure** adapters behind ports, and thin **interfaces** (HTTP + workers).
@@ -43,6 +46,6 @@ for the current milestone and exit criteria.
 ## Tech stack
 
 Python 3.12 · FastAPI · SQLAlchemy 2.0 · Alembic · Pydantic v2 · PostgreSQL + pgvector ·
-Redis + Celery · MinIO/S3 · PyMuPDF · OpenCV · PaddleOCR · OpenCLIP ·
+**Postgres-backed durable job queue** (no Redis/Celery) · MinIO/S3 · PyMuPDF · OpenCV · PaddleOCR · OpenCLIP ·
 React + TypeScript + React Query + Zustand + React Konva ·
 structlog · Prometheus · OpenTelemetry · Pytest · FactoryBoy.
