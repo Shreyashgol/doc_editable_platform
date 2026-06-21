@@ -32,5 +32,5 @@ RUN useradd --create-home --uid 10001 appuser && chown -R appuser /app
 USER appuser
 EXPOSE 8000
 # Default command runs the API; compose overrides for the worker and migrate jobs.
-CMD ["gunicorn", "app.main:app", "-k", "uvicorn.workers.UvicornWorker", \
-     "--bind", "0.0.0.0:8000", "--workers", "2", "--timeout", "120"]
+# Shell form so ${PORT} (injected by Render/PaaS) expands; falls back to 8000 locally.
+CMD gunicorn app.main:app -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:${PORT:-8000} --workers 2 --timeout 120
