@@ -114,8 +114,13 @@ class Document:
         self.updated_at = _now()
 
     def mark_failed(self, reason: str) -> None:
-        if not self.status.is_terminal:
-            self.transition_to(ProcessingStatus.FAILED)
+        # FAILED is reachable from ANY non-terminal state (see docs/02 state machine), so this
+        # bypasses the strict forward-transition table rather than enumerating every source.
+        if self.status.is_terminal:
+            return
+        self.transitions.append((self.status, ProcessingStatus.FAILED, _now()))
+        self.status = ProcessingStatus.FAILED
+        self.updated_at = _now()
 
     def cancel(self) -> None:
         if self.status.is_terminal:

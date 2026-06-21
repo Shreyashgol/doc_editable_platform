@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -10,7 +10,7 @@ from ...domain.entities import Document, Page, ProcessingJob
 from ...domain.enums import ProcessingStatus
 from ...domain.ports import DocumentRepository
 from ..db import mappers
-from ..db.models import DocumentModel, ProcessingJobModel
+from ..db.models import DocumentModel, PageModel, ProcessingJobModel
 
 
 class SqlAlchemyDocumentRepository(DocumentRepository):
@@ -72,6 +72,33 @@ class SqlAlchemyDocumentRepository(DocumentRepository):
 
     async def add_pages(self, pages: list[Page]) -> None:
         self._session.add_all([mappers.page_to_row(p) for p in pages])
+        await self._session.flush()
+
+    async def list_pages(self, document_id: UUID) -> list[Page]:
+        stmt = (
+            select(PageModel)
+            .where(PageModel.document_id == document_id)
+            .order_by(PageModel.page_number)
+        )
+        rows = (await self._session.execute(stmt)).scalars().all()
+        return [
+            Page(
+                id=r.id,
+                document_id=r.document_id,
+                page_number=r.page_number,
+                width_px=r.width_px,
+                height_px=r.height_px,
+                dpi=r.dpi,
+                render_uri=r.render_uri,
+                created_at=r.created_at,
+            )
+            for r in rows
+        ]
+
+    async def delete_pages(self, document_id: UUID) -> None:
+        await self._session.execute(
+            delete(PageModel).where(PageModel.document_id == document_id)
+        )
         await self._session.flush()
 
     async def get_job(self, document_id: UUID) -> ProcessingJob | None:

@@ -86,6 +86,11 @@ class Settings(BaseSettings):
     embedding_pretrained: str = "laion2b_s34b_b79k"
     embedding_dim: int = 512
     classifier_strategy: Literal["rule", "ml", "vit"] = "rule"
+    # Backends default to dependency-free implementations so the worker runs without the heavy
+    # ML stack; production sets ocr_backend=paddle and embedding_backend=openclip.
+    ocr_backend: Literal["paddle", "none"] = "none"
+    embedding_backend: Literal["openclip", "hash"] = "hash"
+    label_association_max_distance: float = 150.0
 
     # --- Observability ---
     log_level: str = "INFO"

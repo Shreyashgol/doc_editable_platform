@@ -33,6 +33,12 @@ class SqlAlchemyRelationshipRepository(RelationshipRepository):
         )
         await self._session.flush()
 
+    async def delete_by_document(self, document_id: UUID) -> None:
+        await self._session.execute(
+            delete(RelationshipModel).where(RelationshipModel.document_id == document_id)
+        )
+        await self._session.flush()
+
     async def list_by_document(self, document_id: UUID) -> list[Relationship]:
         stmt = select(RelationshipModel).where(RelationshipModel.document_id == document_id)
         rows = (await self._session.execute(stmt)).scalars().all()

@@ -20,6 +20,12 @@ class SqlAlchemySymbolRepository(SymbolRepository):
         self._session.add_all([mappers.symbol_to_row(s) for s in symbols])
         await self._session.flush()
 
+    async def delete_by_document(self, document_id: UUID) -> None:
+        await self._session.execute(
+            delete(SymbolModel).where(SymbolModel.document_id == document_id)
+        )
+        await self._session.flush()
+
     async def get(self, symbol_id: UUID) -> Symbol | None:
         stmt = (
             select(SymbolModel)
