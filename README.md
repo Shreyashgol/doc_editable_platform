@@ -3,7 +3,7 @@
 Production-grade platform that ingests PDFs of engineering diagrams (P&IDs, schematics,
 flowcharts, industrial process diagrams) and turns the symbols inside them into **first-class,
 editable, searchable domain objects** — with metadata, custom properties, version history,
-a relationship graph, and vector embeddings for AI search and future RAG.
+relationship graph, and vector embeddings for AI search and future RAG.
 
 > **Core principle:** a symbol is never stored as "just an image". It is a structured domain
 > entity (`id, type, label, page, bbox, rotation, properties, embedding`). Image artifacts live
