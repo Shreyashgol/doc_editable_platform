@@ -20,7 +20,8 @@ without reaching later stages.
 - **PDF bombs**: `max_pdf_pages`, `max_page_pixels`, render timeout, and (in production) worker
   memory cgroup limits.
 - Filenames are sanitized and storage keys are derived server-side (`raw/{owner}/{id}.pdf`),
-  preventing path traversal; image bytes never enter Postgres.
+  preventing path traversal. Artifact bytes are stored via the `ObjectStore` port — either a
+  dedicated `object_blobs` table or an S3-compatible bucket — never inline in entity/metadata rows.
 
 ## Transport & headers
 - TLS terminated at the ingress/LB; DB connections use SSL (`APP_DB_REQUIRE_SSL`).

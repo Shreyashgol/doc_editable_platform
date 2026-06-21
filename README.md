@@ -22,7 +22,7 @@ edit it on a canvas — each symbol a structured domain object, never "just an i
 
 | Surface | URL |
 |---------|-----|
-| Frontend (Vercel) | `https://<your-app>.vercel.app` |
+| **Frontend (Vercel)** | **https://doc-editable-platform.vercel.app** |
 | API + OpenAPI docs (Render) | `https://<your-api>.onrender.com/docs` |
 
 > _Replace the placeholders with your deployed URLs._ The backend runs on Render (API + in-process
