@@ -34,8 +34,9 @@ class Settings(BaseSettings):
     refresh_token_ttl_seconds: int = 60 * 60 * 24 * 14  # 14 days
     rate_limit_per_minute: int = 120
     upload_rate_limit_per_minute: int = 10
-    # CORS: comma-separated origins (e.g. "https://app.vercel.app"). "*" allows all (dev only).
-    cors_allow_origins: list[str] = ["*"]
+    # CORS: comma-separated origins, e.g. "https://app.vercel.app". "*" allows all (dev only).
+    # Kept as a plain string (not list[str]) so env values aren't JSON-parsed by pydantic-settings.
+    cors_allow_origins: str = "*"
 
     # --- Upload / validation guards (PDF-bomb defenses) ---
     max_upload_bytes: int = 50 * 1024 * 1024  # 50 MB
@@ -116,13 +117,10 @@ class Settings(BaseSettings):
             raise ValueError("APP_JWT_SECRET must be set in production")
         return v
 
-    @field_validator("cors_allow_origins", mode="before")
-    @classmethod
-    def _split_origins(cls, v: object) -> object:  # type: ignore[no-untyped-def]
-        # Accept a comma-separated env string in addition to a JSON list.
-        if isinstance(v, str) and not v.strip().startswith("["):
-            return [o.strip() for o in v.split(",") if o.strip()]
-        return v
+    @property
+    def cors_origins(self) -> list[str]:
+        """Parsed list of allowed origins from the comma-separated ``cors_allow_origins``."""
+        return [o.strip() for o in self.cors_allow_origins.split(",") if o.strip()]
 
 
 @lru_cache
