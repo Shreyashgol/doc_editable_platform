@@ -242,9 +242,7 @@ class PdfParser(ABC):
         ...
 
     @abstractmethod
-    def validate_safety(
-        self, pdf_bytes: bytes, *, max_pages: int, max_page_pixels: int
-    ) -> None:
+    def validate_safety(self, pdf_bytes: bytes, *, max_pages: int, max_page_pixels: int) -> None:
         """Raise PdfBombError if the document exceeds safety limits."""
         ...
 

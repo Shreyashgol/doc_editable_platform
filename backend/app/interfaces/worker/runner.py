@@ -63,7 +63,9 @@ class PipelineRunner:
                     await handler(uow, self._engines, task)
                     await uow.task_queue.mark_succeeded(task.task_id)
                     await uow.commit()
-                _log.info("stage_succeeded", stage=task.stage.value, document_id=str(task.document_id))
+                _log.info(
+                    "stage_succeeded", stage=task.stage.value, document_id=str(task.document_id)
+                )
             except Exception as exc:  # noqa: BLE001 - convert to retry/dead decision
                 await self._handle_failure(task, exc)
         finally:

@@ -76,9 +76,7 @@ class SqlAlchemySymbolRepository(SymbolRepository):
         rows = (await self._session.execute(stmt)).scalars().all()
         return [mappers.version_to_domain(r) for r in rows]
 
-    async def upsert_properties(
-        self, symbol_id: UUID, properties: list[SymbolProperty]
-    ) -> None:
+    async def upsert_properties(self, symbol_id: UUID, properties: list[SymbolProperty]) -> None:
         # Replace-set semantics keyed by symbol; simple and predictable for the editor.
         await self._session.execute(
             delete(SymbolPropertyModel).where(SymbolPropertyModel.symbol_id == symbol_id)
@@ -103,9 +101,7 @@ class SqlAlchemySymbolRepository(SymbolRepository):
         ).scalar_one_or_none()
         if existing is None:
             self._session.add(
-                EmbeddingModel(
-                    symbol_id=symbol_id, model=model, dim=len(vector), embedding=vector
-                )
+                EmbeddingModel(symbol_id=symbol_id, model=model, dim=len(vector), embedding=vector)
             )
         else:
             existing.model = model

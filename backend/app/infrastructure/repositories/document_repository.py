@@ -27,9 +27,7 @@ class SqlAlchemyDocumentRepository(DocumentRepository):
         row = await self._session.get(DocumentModel, document_id)
         return mappers.document_to_domain(row) if row else None
 
-    async def get_by_owner_and_hash(
-        self, owner_id: UUID, content_hash: str
-    ) -> Document | None:
+    async def get_by_owner_and_hash(self, owner_id: UUID, content_hash: str) -> Document | None:
         stmt = select(DocumentModel).where(
             DocumentModel.owner_id == owner_id,
             DocumentModel.content_hash == content_hash,
@@ -96,9 +94,7 @@ class SqlAlchemyDocumentRepository(DocumentRepository):
         ]
 
     async def delete_pages(self, document_id: UUID) -> None:
-        await self._session.execute(
-            delete(PageModel).where(PageModel.document_id == document_id)
-        )
+        await self._session.execute(delete(PageModel).where(PageModel.document_id == document_id))
         await self._session.flush()
 
     async def get_job(self, document_id: UUID) -> ProcessingJob | None:

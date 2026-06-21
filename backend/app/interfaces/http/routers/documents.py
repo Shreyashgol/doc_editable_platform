@@ -56,9 +56,7 @@ async def list_documents(
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
 ) -> Page[DocumentResponse]:
-    docs, total = await service.list(
-        principal, status=status_filter, limit=limit, offset=offset
-    )
+    docs, total = await service.list(principal, status=status_filter, limit=limit, offset=offset)
     return Page(
         items=[DocumentResponse.from_domain(d) for d in docs],
         total=total,

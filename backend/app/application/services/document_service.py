@@ -74,9 +74,7 @@ class DocumentService:
                 size_bytes=validated.size_bytes,
             )
             doc.storage_uri = f"raw/{principal.user_id}/{doc.id}.pdf"
-            await asyncio.to_thread(
-                self._store.put, doc.storage_uri, content, validated.mime_type
-            )
+            await asyncio.to_thread(self._store.put, doc.storage_uri, content, validated.mime_type)
 
             await self._uow.documents.add(doc)
             await self._uow.audit.add(

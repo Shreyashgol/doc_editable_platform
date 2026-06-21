@@ -5,7 +5,6 @@ from __future__ import annotations
 from uuid import uuid4
 
 import pytest
-
 from app.domain.entities import (
     AuditLog,
     Document,
@@ -72,8 +71,12 @@ async def test_processing_job_upsert(session):
     repo = SqlAlchemyDocumentRepository(session)
     owner = uuid4()
     doc = Document(
-        owner_id=owner, filename="j.pdf", content_hash="c" * 64,
-        storage_uri="raw/j.pdf", mime_type="application/pdf", size_bytes=10,
+        owner_id=owner,
+        filename="j.pdf",
+        content_hash="c" * 64,
+        storage_uri="raw/j.pdf",
+        mime_type="application/pdf",
+        size_bytes=10,
     )
     await repo.add(doc)
     job = await repo.get_job(doc.id)
@@ -100,18 +103,22 @@ async def test_symbol_lifecycle_properties_and_versions(session):
     srepo = SqlAlchemySymbolRepository(session)
     owner = uuid4()
     doc = Document(
-        owner_id=owner, filename="s.pdf", content_hash="d" * 64,
-        storage_uri="raw/s.pdf", mime_type="application/pdf", size_bytes=10,
+        owner_id=owner,
+        filename="s.pdf",
+        content_hash="d" * 64,
+        storage_uri="raw/s.pdf",
+        mime_type="application/pdf",
+        size_bytes=10,
     )
     await drepo.add(doc)
 
     sym = Symbol(
-        document_id=doc.id, page_number=1, bbox=BBox(10, 10, 30, 40),
+        document_id=doc.id,
+        page_number=1,
+        bbox=BBox(10, 10, 30, 40),
         crop_uri="crops/s.png",
     )
-    sym.apply_classification(
-        Classification(SymbolType.VALVE, ClassificationMethod.RULE, 0.9, "XV")
-    )
+    sym.apply_classification(Classification(SymbolType.VALVE, ClassificationMethod.RULE, 0.9, "XV"))
     sym.assign_label("XV-200")
     await srepo.add_many([sym])
 
@@ -131,10 +138,12 @@ async def test_symbol_lifecycle_properties_and_versions(session):
 
     # typed properties upsert (replace-set)
     props = [
-        SymbolProperty(symbol_id=sym.id, key="tag", value_type=PropertyValueType.STRING,
-                       value="XV-200"),
-        SymbolProperty(symbol_id=sym.id, key="pressure", value_type=PropertyValueType.NUMBER,
-                       value=12.5),
+        SymbolProperty(
+            symbol_id=sym.id, key="tag", value_type=PropertyValueType.STRING, value="XV-200"
+        ),
+        SymbolProperty(
+            symbol_id=sym.id, key="pressure", value_type=PropertyValueType.NUMBER, value=12.5
+        ),
     ]
     await srepo.upsert_properties(sym.id, props)
     withprops = await srepo.get(sym.id)
@@ -147,8 +156,12 @@ async def test_embedding_and_similarity_search(session):
     srepo = SqlAlchemySymbolRepository(session)
     owner = uuid4()
     doc = Document(
-        owner_id=owner, filename="e.pdf", content_hash="e" * 64,
-        storage_uri="raw/e.pdf", mime_type="application/pdf", size_bytes=10,
+        owner_id=owner,
+        filename="e.pdf",
+        content_hash="e" * 64,
+        storage_uri="raw/e.pdf",
+        mime_type="application/pdf",
+        size_bytes=10,
     )
     await drepo.add(doc)
 
@@ -159,14 +172,19 @@ async def test_embedding_and_similarity_search(session):
     c = Symbol(document_id=doc.id, page_number=1, bbox=BBox(40, 0, 10, 10), crop_uri="c.png")
     await srepo.add_many([a, b, c])
 
-    va = base.copy(); va[0] = 1.0
-    vb = base.copy(); vb[0] = 0.9; vb[1] = 0.1
-    vc = base.copy(); vc[5] = 1.0
+    va = base.copy()
+    va[0] = 1.0
+    vb = base.copy()
+    vb[0] = 0.9
+    vb[1] = 0.1
+    vc = base.copy()
+    vc[5] = 1.0
     await srepo.set_embedding(a.id, "ViT-B-32", va)
     await srepo.set_embedding(b.id, "ViT-B-32", vb)
     await srepo.set_embedding(c.id, "ViT-B-32", vc)
 
-    query = base.copy(); query[0] = 1.0
+    query = base.copy()
+    query[0] = 1.0
     results = await srepo.search_similar(query, top_k=3, document_id=doc.id)
     assert [s.id for s, _ in results][0] == a.id  # exact match ranks first
     assert results[0][1] > results[-1][1]  # similarity ordered descending
@@ -178,8 +196,12 @@ async def test_relationship_graph_and_neighbours(session):
     rrepo = SqlAlchemyRelationshipRepository(session)
     owner = uuid4()
     doc = Document(
-        owner_id=owner, filename="g.pdf", content_hash="f" * 64,
-        storage_uri="raw/g.pdf", mime_type="application/pdf", size_bytes=10,
+        owner_id=owner,
+        filename="g.pdf",
+        content_hash="f" * 64,
+        storage_uri="raw/g.pdf",
+        mime_type="application/pdf",
+        size_bytes=10,
     )
     await drepo.add(doc)
     pump = Symbol(document_id=doc.id, page_number=1, bbox=BBox(0, 0, 10, 10), crop_uri="p.png")
@@ -209,7 +231,10 @@ async def test_user_and_audit_repositories(session):
     assert found is not None and Role.ENGINEER in found.roles
 
     entry = AuditLog(
-        actor_id=user.id, entity_type="document", entity_id=uuid4(), action="upload",
+        actor_id=user.id,
+        entity_type="document",
+        entity_id=uuid4(),
+        action="upload",
         correlation_id="corr-1",
     )
     await arepo.add(entry)

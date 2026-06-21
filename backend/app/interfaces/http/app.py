@@ -14,7 +14,7 @@ from ...core.container import Container
 from ...core.logging import configure_logging
 from .metrics import register_metrics
 from .middleware import register_exception_handlers, register_middleware
-from .routers import auth, documents, graph, health, search, symbols
+from .routers import audit, auth, documents, graph, health, search, symbols
 
 
 def create_app(*, settings: Settings | None = None, container: Container | None = None) -> FastAPI:
@@ -47,5 +47,6 @@ def create_app(*, settings: Settings | None = None, container: Container | None 
     app.include_router(graph.documents_router, prefix=prefix)
     app.include_router(graph.router, prefix=prefix)
     app.include_router(search.router, prefix=prefix)
+    app.include_router(audit.router, prefix=prefix)
     app.include_router(health.router)
     return app

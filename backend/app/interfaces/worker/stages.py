@@ -118,9 +118,7 @@ async def handle_pdf_extract(uow: UnitOfWork, engines: WorkerEngines, task) -> b
                 crop_uri="",  # set after id is known
             )
             symbol.crop_uri = f"crops/{doc.id}/page-{page_number}/{symbol.id}.png"
-            await asyncio.to_thread(
-                engines.object_store.put, symbol.crop_uri, crop, "image/png"
-            )
+            await asyncio.to_thread(engines.object_store.put, symbol.crop_uri, crop, "image/png")
             symbols.append(symbol)
 
     await uow.documents.add_pages(pages)
@@ -129,9 +127,7 @@ async def handle_pdf_extract(uow: UnitOfWork, engines: WorkerEngines, task) -> b
     job.succeed(0.0)
     await uow.documents.update(doc)
     await uow.documents.upsert_job(job)
-    await uow.task_queue.enqueue(
-        doc.id, ProcessingStage.OCR, max_attempts=_max_attempts(engines)
-    )
+    await uow.task_queue.enqueue(doc.id, ProcessingStage.OCR, max_attempts=_max_attempts(engines))
     return True
 
 
@@ -157,7 +153,8 @@ async def handle_ocr(uow: UnitOfWork, engines: WorkerEngines, task) -> bool:
         render = await asyncio.to_thread(engines.object_store.get, page.render_uri)
         tokens = await asyncio.to_thread(engines.ocr.extract_text, render)
         associations = associate_text_to_symbol(
-            page_symbols, tokens,
+            page_symbols,
+            tokens,
             max_distance=engines.settings.label_association_max_distance,
         )
         for symbol in page_symbols:
@@ -192,9 +189,7 @@ async def handle_classify(uow: UnitOfWork, engines: WorkerEngines, task) -> bool
     job.succeed(0.0)
     await uow.documents.update(doc)
     await uow.documents.upsert_job(job)
-    await uow.task_queue.enqueue(
-        doc.id, ProcessingStage.EMBED, max_attempts=_max_attempts(engines)
-    )
+    await uow.task_queue.enqueue(doc.id, ProcessingStage.EMBED, max_attempts=_max_attempts(engines))
     return True
 
 
@@ -215,9 +210,7 @@ async def handle_embed(uow: UnitOfWork, engines: WorkerEngines, task) -> bool:
     job.succeed(0.0)
     await uow.documents.update(doc)
     await uow.documents.upsert_job(job)
-    await uow.task_queue.enqueue(
-        doc.id, ProcessingStage.GRAPH, max_attempts=_max_attempts(engines)
-    )
+    await uow.task_queue.enqueue(doc.id, ProcessingStage.GRAPH, max_attempts=_max_attempts(engines))
     return True
 
 

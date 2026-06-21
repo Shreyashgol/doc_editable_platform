@@ -120,9 +120,7 @@ class SymbolService:
             assert refreshed is not None
             return refreshed
 
-    async def list_versions(
-        self, principal: Principal, symbol_id: UUID
-    ) -> list[SymbolVersion]:
+    async def list_versions(self, principal: Principal, symbol_id: UUID) -> list[SymbolVersion]:
         async with self._uow:
             await self._load_owned(self._uow, principal, symbol_id)
             return await self._uow.symbols.list_versions(symbol_id)

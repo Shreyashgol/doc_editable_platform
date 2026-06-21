@@ -78,9 +78,6 @@ async def upsert_properties(
     service: SymbolService = Depends(get_symbol_service),
 ) -> SymbolResponse:
     props = [
-        PropertyInput(key=p.key, value_type=p.value_type, value=p.value)
-        for p in body.properties
+        PropertyInput(key=p.key, value_type=p.value_type, value=p.value) for p in body.properties
     ]
-    return SymbolResponse.from_domain(
-        await service.upsert_properties(principal, symbol_id, props)
-    )
+    return SymbolResponse.from_domain(await service.upsert_properties(principal, symbol_id, props))

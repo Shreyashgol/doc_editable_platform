@@ -36,12 +36,38 @@ Built on Clean Architecture + DDD: a framework-free **domain** core, **applicati
 | 3 — Infra/Security/Deploy | [`docs/03-phase3-infra-security-deploy.md`](docs/03-phase3-infra-security-deploy.md) |
 | 4 — Implementation Plan | [`docs/04-phase4-implementation-plan.md`](docs/04-phase4-implementation-plan.md) |
 | ADRs | [`docs/adr/`](docs/adr/) — key decisions with alternatives & tradeoffs |
+| Guides | [deployment](docs/deployment-guide.md) · [monitoring](docs/monitoring-guide.md) · [security](docs/security-guide.md) |
+
+## Layout
+
+```
+backend/    FastAPI app + worker (Clean Architecture: domain / application / infrastructure / interfaces)
+frontend/   React + TS SPA (upload, dashboard, Konva canvas, graph, search)
+infra/      docker-compose (Postgres+pgvector, MinIO, ClamAV, Prometheus, Grafana) + configs
+docs/       Phase 1–4 design, ADRs, operational guides
+.github/    CI (lint, type-check, security scan, tests+coverage gate, docker build+scan)
+```
+
+Run the whole stack: `docker compose -f infra/docker-compose.yml up --build` (see the
+[deployment guide](docs/deployment-guide.md)). Backend tests run against Postgres/pgvector
+(local container or Neon); the suite enforces a 90% coverage gate.
 
 ## Status
 
-Phases 1–4 (design) are complete and committed. Phase 5 (production code) is built in the
-milestone order defined in the implementation plan (M0 scaffolding → M7 docs). See that document
-for the current milestone and exit criteria.
+Phases 1–4 (design) and Phase 5 (production code) are complete:
+
+| Milestone | Scope | Verified |
+|-----------|-------|----------|
+| M0 | Scaffold + framework-free domain (entities, state machine, value objects, ports) | domain unit tests |
+| M1 | SQLAlchemy models, Alembic + pgvector, repositories | integration tests on live Postgres |
+| M2 | Auth (JWT+RBAC), upload validation pipeline, Postgres job queue, middleware | API tests |
+| M3 | Worker pipeline: validate→extract→OCR→classify→embed→graph→finalize | end-to-end pipeline test (real PyMuPDF+OpenCV) |
+| M4 | Symbol/property/version/graph/search APIs | API tests |
+| M5 | React frontend (upload, dashboard, Konva canvas, graph, search) | vitest store tests |
+| M6 | Prometheus/structlog/health, rate limiting, ClamAV, docker-compose, CI/CD, guides | — |
+
+Tests exercise real Postgres + pgvector and real CV extraction; the suite enforces a 90%
+coverage gate in CI.
 
 ## Tech stack
 

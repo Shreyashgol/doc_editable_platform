@@ -8,12 +8,8 @@ from fastapi import FastAPI, Request, Response
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
 from starlette.middleware.base import BaseHTTPMiddleware
 
-REQUESTS = Counter(
-    "http_requests_total", "Total HTTP requests", ["method", "path", "status"]
-)
-LATENCY = Histogram(
-    "http_request_duration_seconds", "HTTP request latency", ["method", "path"]
-)
+REQUESTS = Counter("http_requests_total", "Total HTTP requests", ["method", "path", "status"])
+LATENCY = Histogram("http_request_duration_seconds", "HTTP request latency", ["method", "path"])
 
 
 def _route_template(request: Request) -> str:

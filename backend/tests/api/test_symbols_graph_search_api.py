@@ -10,13 +10,12 @@ import hashlib
 from uuid import UUID, uuid4
 
 import pytest
-from httpx import AsyncClient
-
 from app.core.container import Container
 from app.domain.entities import Document, Symbol
 from app.domain.enums import ClassificationMethod, SymbolType
 from app.domain.value_objects import BBox, Classification
 from app.infrastructure.db.unit_of_work import SqlAlchemyUnitOfWork
+from httpx import AsyncClient
 
 pytestmark = pytest.mark.api
 
@@ -78,8 +77,12 @@ async def test_edit_symbol_creates_version(client: AsyncClient, auth, container)
     edit = await client.patch(
         f"/api/v1/symbols/{pump_id}",
         headers=headers,
-        json={"bbox": {"x": 5, "y": 5, "width": 20, "height": 20}, "rotation": 90,
-              "type": "Compressor", "reason": "reclassified"},
+        json={
+            "bbox": {"x": 5, "y": 5, "width": 20, "height": 20},
+            "rotation": 90,
+            "type": "Compressor",
+            "reason": "reclassified",
+        },
     )
     assert edit.status_code == 200
     body = edit.json()
@@ -103,10 +106,12 @@ async def test_upsert_properties(client: AsyncClient, auth, container):
     resp = await client.put(
         f"/api/v1/symbols/{pump_id}/properties",
         headers=headers,
-        json={"properties": [
-            {"key": "tag", "value_type": "string", "value": "P-101"},
-            {"key": "flow_rate", "value_type": "number", "value": 42.5},
-        ]},
+        json={
+            "properties": [
+                {"key": "tag", "value_type": "string", "value": "P-101"},
+                {"key": "flow_rate", "value_type": "number", "value": 42.5},
+            ]
+        },
     )
     assert resp.status_code == 200
     props = {p["key"]: p["value"] for p in resp.json()["properties"]}
@@ -120,8 +125,13 @@ async def test_graph_create_get_delete_edge(client: AsyncClient, auth, container
     created = await client.post(
         "/api/v1/relationships",
         headers=headers,
-        json={"document_id": str(doc_id), "source_symbol_id": str(pump_id),
-              "target_symbol_id": str(valve_id), "type": "feeds", "confidence": 0.8},
+        json={
+            "document_id": str(doc_id),
+            "source_symbol_id": str(pump_id),
+            "target_symbol_id": str(valve_id),
+            "type": "feeds",
+            "confidence": 0.8,
+        },
     )
     assert created.status_code == 201
     edge_id = created.json()["id"]
@@ -144,8 +154,12 @@ async def test_self_loop_edge_rejected(client: AsyncClient, auth, container):
     resp = await client.post(
         "/api/v1/relationships",
         headers=headers,
-        json={"document_id": str(doc_id), "source_symbol_id": str(pump_id),
-              "target_symbol_id": str(pump_id), "type": "feeds"},
+        json={
+            "document_id": str(doc_id),
+            "source_symbol_id": str(pump_id),
+            "target_symbol_id": str(pump_id),
+            "type": "feeds",
+        },
     )
     assert resp.status_code == 422
 

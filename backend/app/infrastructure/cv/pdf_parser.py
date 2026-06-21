@@ -20,9 +20,7 @@ class PyMuPdfParser(PdfParser):
         except Exception as exc:
             raise ProcessingError(f"failed to open PDF: {exc}") from exc
 
-    def validate_safety(
-        self, pdf_bytes: bytes, *, max_pages: int, max_page_pixels: int
-    ) -> None:
+    def validate_safety(self, pdf_bytes: bytes, *, max_pages: int, max_page_pixels: int) -> None:
         import fitz
 
         try:
@@ -33,9 +31,7 @@ class PyMuPdfParser(PdfParser):
             if doc.page_count == 0:
                 raise ProcessingError("PDF has no pages")
             if doc.page_count > max_pages:
-                raise PdfBombError(
-                    f"PDF has {doc.page_count} pages (limit {max_pages})"
-                )
+                raise PdfBombError(f"PDF has {doc.page_count} pages (limit {max_pages})")
             for page in doc:
                 rect = page.rect
                 # Pixel budget at 1x; rendering DPI multiplies this, so cap conservatively.
@@ -45,9 +41,7 @@ class PyMuPdfParser(PdfParser):
                         f"page {page.number} is {pixels}px (limit {max_page_pixels})"
                     )
 
-    def render_pages(
-        self, pdf_bytes: bytes, dpi: int
-    ) -> list[tuple[int, bytes, int, int]]:
+    def render_pages(self, pdf_bytes: bytes, dpi: int) -> list[tuple[int, bytes, int, int]]:
         import fitz
 
         out: list[tuple[int, bytes, int, int]] = []

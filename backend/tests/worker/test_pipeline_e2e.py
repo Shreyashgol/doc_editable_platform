@@ -13,8 +13,6 @@ from uuid import uuid4
 
 import pytest
 import pytest_asyncio
-from sqlalchemy import text
-
 from app.core.config import get_settings
 from app.domain.entities import Document
 from app.domain.enums import ProcessingStage, ProcessingStatus, SymbolType
@@ -26,6 +24,7 @@ from app.infrastructure.db.unit_of_work import SqlAlchemyUnitOfWork
 from app.infrastructure.storage.s3 import InMemoryObjectStore
 from app.interfaces.worker.engines import build_engines
 from app.interfaces.worker.runner import PipelineRunner
+from sqlalchemy import text
 
 _HAS_DB = bool(os.getenv("APP_DATABASE_URL"))
 pytestmark = [

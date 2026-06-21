@@ -81,7 +81,8 @@ ALLOWED_TRANSITIONS: dict[ProcessingStatus, frozenset[ProcessingStatus]] = {
         }
     ),
     # RETRYING returns to whichever active stage is being retried.
-    ProcessingStatus.RETRYING: _ACTIVE_STAGES | {ProcessingStatus.FAILED, ProcessingStatus.CANCELLED},
+    ProcessingStatus.RETRYING: _ACTIVE_STAGES
+    | {ProcessingStatus.FAILED, ProcessingStatus.CANCELLED},
     ProcessingStatus.COMPLETED: frozenset(),
     ProcessingStatus.FAILED: frozenset({ProcessingStatus.QUEUED}),  # explicit reprocess
     ProcessingStatus.CANCELLED: frozenset(),

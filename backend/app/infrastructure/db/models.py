@@ -91,12 +91,8 @@ class ProcessingJobModel(UUIDMixin, TimestampMixin, Base):
     max_attempts: Mapped[int] = mapped_column(Integer, default=5, nullable=False)
     last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
     timings: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)
-    started_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    finished_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     document: Mapped[DocumentModel] = relationship(back_populates="job")
 

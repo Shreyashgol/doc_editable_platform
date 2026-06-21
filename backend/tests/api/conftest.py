@@ -10,14 +10,13 @@ from uuid import UUID
 
 import pytest
 import pytest_asyncio
-from httpx import ASGITransport, AsyncClient
-from sqlalchemy import text
-
 from app.core.config import get_settings
 from app.core.container import Container
 from app.infrastructure.security.clamav import NullVirusScanner
 from app.infrastructure.storage.s3 import InMemoryObjectStore
 from app.interfaces.http.app import create_app
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy import text
 
 _HAS_DB = bool(os.getenv("APP_DATABASE_URL"))
 pytestmark = pytest.mark.skipif(not _HAS_DB, reason="APP_DATABASE_URL not configured")

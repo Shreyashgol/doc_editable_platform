@@ -56,9 +56,7 @@ async def test_upload_happy_path_enqueues_validate(client: AsyncClient, auth, co
     async with container.session_factory() as s:
         row = (
             await s.execute(
-                text(
-                    "SELECT stage, status FROM pipeline_tasks WHERE document_id = :d"
-                ),
+                text("SELECT stage, status FROM pipeline_tasks WHERE document_id = :d"),
                 {"d": doc_id},
             )
         ).first()
@@ -123,7 +121,6 @@ async def test_cannot_access_another_users_document(client: AsyncClient, auth, c
 
     # second user
     import uuid
-
     from uuid import UUID
 
     email = f"apitest-{uuid.uuid4().hex}@example.com"

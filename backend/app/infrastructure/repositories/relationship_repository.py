@@ -86,8 +86,12 @@ class SqlAlchemyRelationshipRepository(RelationshipRepository):
         if not ids:
             return []
         rows = (
-            await self._session.execute(
-                select(RelationshipModel).where(RelationshipModel.id.in_(ids))
+            (
+                await self._session.execute(
+                    select(RelationshipModel).where(RelationshipModel.id.in_(ids))
+                )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
         return [mappers.relationship_to_domain(r) for r in rows]

@@ -67,7 +67,12 @@ src = ["app", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "C4", "SIM", "ARG", "PTH"]
-ignore = ["B008"]  # FastAPI Depends() in defaults is idiomatic
+ignore = [
+    "B008",            # FastAPI Depends() in defaults is idiomatic
+    "UP042",           # str+Enum mixin is deliberate (JSON value + pydantic interop)
+    "UP046",           # Generic[T] kept for pydantic generic model compatibility
+    "ARG001", "ARG002", # adapters intentionally ignore some port-contract parameters
+]
 
 [tool.mypy]
 python_version = "3.12"
@@ -89,7 +94,12 @@ markers = [
 [tool.coverage.run]
 branch = true
 source = ["app"]
-omit = ["app/interfaces/worker/celery_app.py", "*/migrations/*"]
+omit = [
+    "*/migrations/*",
+    "app/main.py",                                   # ASGI entrypoint (trivial)
+    "app/interfaces/worker/run.py",                  # process entrypoint loop
+    "app/infrastructure/embeddings/openclip_embedder.py",  # needs torch + model download
+]
 
 [tool.coverage.report]
 fail_under = 90

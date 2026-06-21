@@ -1,7 +1,6 @@
 import math
 
 import pytest
-
 from app.domain.value_objects import BBox, Centroid
 
 

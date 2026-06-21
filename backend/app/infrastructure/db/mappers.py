@@ -111,8 +111,9 @@ def job_apply_to_row(job: ProcessingJob, row: m.ProcessingJobModel) -> None:
 
 
 def job_to_row(job: ProcessingJob) -> m.ProcessingJobModel:
-    row = m.ProcessingJobModel(id=job.id, document_id=job.document_id, stage=job.stage.value,
-                               stage_status=job.stage_status)
+    row = m.ProcessingJobModel(
+        id=job.id, document_id=job.document_id, stage=job.stage.value, stage_status=job.stage_status
+    )
     job_apply_to_row(job, row)
     return row
 
@@ -138,9 +139,7 @@ def symbol_to_domain(row: m.SymbolModel) -> Symbol:
         label=row.label,
         rotation=row.rotation,
         classification_method=(
-            ClassificationMethod(row.classification_method)
-            if row.classification_method
-            else None
+            ClassificationMethod(row.classification_method) if row.classification_method else None
         ),
         classification_confidence=row.classification_confidence,
         embedding=list(row.embedding.embedding) if row.embedding else None,

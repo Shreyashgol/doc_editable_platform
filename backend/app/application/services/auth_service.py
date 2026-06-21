@@ -40,7 +40,11 @@ class AuthService:
     async def authenticate(self, email: str, password: str) -> TokenPair:
         async with self._uow:
             user = await self._uow.users.get_by_email(email)
-            if user is None or not user.is_active or not verify_password(password, user.password_hash):
+            if (
+                user is None
+                or not user.is_active
+                or not verify_password(password, user.password_hash)
+            ):
                 raise AuthenticationError("invalid credentials")
             roles = [r.value for r in user.roles]
             return TokenPair(

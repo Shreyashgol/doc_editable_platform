@@ -108,9 +108,7 @@ class SqlAlchemyTaskQueue(TaskQueue):
             {"id": str(task_id)},
         )
 
-    async def mark_retry(
-        self, task_id: UUID, *, error: str, run_after_seconds: float
-    ) -> None:
+    async def mark_retry(self, task_id: UUID, *, error: str, run_after_seconds: float) -> None:
         await self._session.execute(
             text(
                 """

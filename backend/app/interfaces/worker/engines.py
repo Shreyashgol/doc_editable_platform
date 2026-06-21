@@ -33,9 +33,7 @@ class WorkerEngines:
     settings: Settings
 
 
-def build_engines(
-    settings: Settings, *, object_store: ObjectStore | None = None
-) -> WorkerEngines:
+def build_engines(settings: Settings, *, object_store: ObjectStore | None = None) -> WorkerEngines:
     return WorkerEngines(
         parser=PyMuPdfParser(),
         extractor=OpenCvSymbolExtractor(),

@@ -48,7 +48,10 @@ class PaddleOcrEngine(OcrEngine):  # pragma: no cover - heavy ML dependency
                 if w <= 0 or h <= 0:
                     continue
                 tokens.append(
-                    OcrToken(text=text, bbox=BBox(float(x), float(y), float(w), float(h)),
-                             confidence=float(conf))
+                    OcrToken(
+                        text=text,
+                        bbox=BBox(float(x), float(y), float(w), float(h)),
+                        confidence=float(conf),
+                    )
                 )
         return tokens

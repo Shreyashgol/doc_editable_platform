@@ -76,12 +76,15 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         limiter = self._strict if self._is_strict(request) else self._default
         if not limiter.allow(self._client_key(request)):
             body = ProblemDetail(
-                title="Rate Limited", status=429, code="rate_limited",
+                title="Rate Limited",
+                status=429,
+                code="rate_limited",
                 detail="too many requests; slow down",
                 correlation_id=getattr(request.state, "correlation_id", None),
             )
             return JSONResponse(
-                status_code=429, content=body.model_dump(exclude_none=True),
+                status_code=429,
+                content=body.model_dump(exclude_none=True),
                 media_type="application/problem+json",
             )
         return await call_next(request)

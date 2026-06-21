@@ -46,8 +46,14 @@ class SecureHeadersMiddleware(BaseHTTPMiddleware):
         return response
 
 
-def _problem(status: int, title: str, code: str, detail: str, cid: str | None,
-             errors: list[dict] | None = None) -> JSONResponse:
+def _problem(
+    status: int,
+    title: str,
+    code: str,
+    detail: str,
+    cid: str | None,
+    errors: list[dict] | None = None,
+) -> JSONResponse:
     body = ProblemDetail(
         title=title, status=status, code=code, detail=detail, correlation_id=cid, errors=errors
     )
@@ -64,15 +70,17 @@ def register_exception_handlers(app: FastAPI) -> None:
         cid = getattr(request.state, "correlation_id", None)
         if exc.http_status >= 500:
             _log.error("app_error", code=exc.code, detail=exc.message)
-        return _problem(exc.http_status, exc.code.replace("_", " ").title(), exc.code,
-                        exc.message, cid)
+        return _problem(
+            exc.http_status, exc.code.replace("_", " ").title(), exc.code, exc.message, cid
+        )
 
     @app.exception_handler(Exception)
     async def _handle_unexpected(request: Request, exc: Exception) -> JSONResponse:
         cid = getattr(request.state, "correlation_id", None)
         _log.exception("unhandled_exception", error=str(exc))
-        return _problem(500, "Internal Server Error", "internal_error",
-                        "an unexpected error occurred", cid)
+        return _problem(
+            500, "Internal Server Error", "internal_error", "an unexpected error occurred", cid
+        )
 
 
 def register_middleware(app: FastAPI, settings) -> None:  # type: ignore[no-untyped-def]

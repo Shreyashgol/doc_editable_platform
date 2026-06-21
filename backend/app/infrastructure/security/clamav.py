@@ -15,7 +15,7 @@ class ClamAVScanner(VirusScanner):
         self._port = port
         self._timeout = timeout
 
-    def scan(self, data: bytes) -> None:
+    def scan(self, data: bytes) -> None:  # pragma: no cover - requires a live clamd socket
         try:
             with socket.create_connection((self._host, self._port), timeout=self._timeout) as sock:
                 sock.sendall(b"zINSTREAM\x00")
@@ -36,7 +36,7 @@ class ClamAVScanner(VirusScanner):
 
 
 class NullVirusScanner(VirusScanner):
-    """Used when scanning is disabled (local/dev). Always passes; documented as insecure for prod."""
+    """Used when scanning is disabled (local/dev). Always passes; insecure for production."""
 
     def scan(self, data: bytes) -> None:
         return None

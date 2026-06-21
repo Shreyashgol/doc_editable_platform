@@ -11,10 +11,9 @@ from collections.abc import AsyncIterator
 
 import pytest
 import pytest_asyncio
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.config import get_settings
 from app.infrastructure.db.base import create_engine_and_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession
 
 _HAS_DB = bool(os.getenv("APP_DATABASE_URL"))
 

@@ -35,17 +35,13 @@ class OpenCvSymbolExtractor(SymbolExtractor):
 
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         # Invert + Otsu so foreground strokes become white on black.
-        _, thresh = cv2.threshold(
-            gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU
-        )
+        _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
         # Denoise + connect nearby strokes into symbol blobs.
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
         opened = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel, iterations=1)
         closed = cv2.morphologyEx(opened, cv2.MORPH_CLOSE, kernel, iterations=2)
 
-        contours, _ = cv2.findContours(
-            closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
-        )
+        contours, _ = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         candidates: list[tuple[float, BBox]] = []
         for cnt in contours:

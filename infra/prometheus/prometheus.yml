@@ -1,0 +1,15 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: docai-api
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["api:8000"]
+
+# Alerting rules (wire to Alertmanager in production). Key signals:
+#   - http_request_duration_seconds p99 (latency SLO)
+#   - http_requests_total{status=~"5.."} rate (error budget)
+#   - dead-letter task count (pipeline_tasks status='dead') via a DB exporter
+#   - readiness probe failures

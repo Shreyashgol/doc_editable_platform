@@ -106,8 +106,7 @@ class Document:
         allowed = ALLOWED_TRANSITIONS.get(self.status, frozenset())
         if target not in allowed:
             raise IllegalStateTransitionError(
-                f"Cannot transition document {self.id} from {self.status.value} "
-                f"to {target.value}"
+                f"Cannot transition document {self.id} from {self.status.value} to {target.value}"
             )
         self.transitions.append((self.status, target, _now()))
         self.status = target
