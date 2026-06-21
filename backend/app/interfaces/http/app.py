@@ -8,6 +8,7 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from ...core.config import Settings, get_settings
 from ...core.container import Container
@@ -37,6 +38,14 @@ def create_app(*, settings: Settings | None = None, container: Container | None 
 
     register_metrics(app)
     register_middleware(app, settings)
+    # CORS added last → outermost, so preflight OPTIONS is handled before other middleware.
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_allow_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
     register_exception_handlers(app)
 
     prefix = settings.api_v1_prefix

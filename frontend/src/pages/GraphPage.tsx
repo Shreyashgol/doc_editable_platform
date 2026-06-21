@@ -1,52 +1,73 @@
-import { Layer, Line, Stage, Text, Circle } from "react-konva";
-import { useParams } from "react-router-dom";
+import { Circle, Layer, Line, Stage, Text } from "react-konva";
+import { Link, useParams } from "react-router-dom";
 import { useGraph } from "@/api/hooks";
+import { useThemeColors } from "@/hooks/useThemeColors";
 
-// Simple radial layout: nodes on a circle, edges as connecting lines. A force layout could
-// replace this without changing the data contract.
+// Radial layout: nodes on a circle, edges as connecting lines. A force layout could replace
+// this without changing the data contract.
 export function GraphPage() {
   const { id = "" } = useParams();
   const { data } = useGraph(id);
-  if (!data) return <p>Loading graph…</p>;
-
-  const cx = 450;
-  const cy = 300;
-  const radius = 220;
-  const positions = new Map<string, { x: number; y: number }>();
-  data.nodes.forEach((n, i) => {
-    const angle = (i / Math.max(1, data.nodes.length)) * Math.PI * 2;
-    positions.set(n.id, { x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle) });
-  });
+  const colors = useThemeColors();
 
   return (
     <div>
-      <h2>Symbol graph</h2>
-      <div style={{ border: "1px solid #ccc", width: 900 }}>
-        <Stage width={900} height={600}>
-          <Layer>
-            {data.edges.map((e) => {
-              const a = positions.get(e.source);
-              const b = positions.get(e.target);
-              if (!a || !b) return null;
-              return (
-                <Line key={e.id} points={[a.x, a.y, b.x, b.y]} stroke="#aaa" strokeWidth={1} />
-              );
-            })}
-            {data.nodes.map((n) => {
-              const p = positions.get(n.id)!;
-              return (
-                <>
-                  <Circle key={n.id} x={p.x} y={p.y} radius={10} fill="#2980b9" />
-                  <Text key={`${n.id}-t`} x={p.x + 12} y={p.y - 6} text={n.label ?? n.type} fontSize={11} />
-                </>
-              );
-            })}
-          </Layer>
-        </Stage>
+      <div className="page-title">
+        <div className="row">
+          <Link className="btn btn--ghost" to={`/documents/${id}/canvas`}>← Canvas</Link>
+          <h2 style={{ margin: 0 }}>Symbol graph</h2>
+        </div>
+        {data && (
+          <span className="hint">{data.nodes.length} symbols · {data.edges.length} relationships</span>
+        )}
       </div>
-      <p style={{ color: "#777", fontSize: 12 }}>
-        {data.nodes.length} symbols · {data.edges.length} relationships
-      </p>
+
+      {!data ? (
+        <p className="muted">Loading graph…</p>
+      ) : (
+        <div className="canvas-frame">
+          <Stage width={880} height={600} style={{ background: colors.bg }}>
+            <Layer>
+              {(() => {
+                const cx = 440, cy = 300, radius = 220;
+                const pos = new Map<string, { x: number; y: number }>();
+                data.nodes.forEach((n, i) => {
+                  const a = (i / Math.max(1, data.nodes.length)) * Math.PI * 2;
+                  pos.set(n.id, { x: cx + radius * Math.cos(a), y: cy + radius * Math.sin(a) });
+                });
+                return (
+                  <>
+                    {data.edges.map((e) => {
+                      const a = pos.get(e.source), b = pos.get(e.target);
+                      if (!a || !b) return null;
+                      return <Line key={e.id} points={[a.x, a.y, b.x, b.y]} stroke={colors.grid} strokeWidth={1.5} />;
+                    })}
+                    {data.nodes.map((n) => {
+                      const p = pos.get(n.id)!;
+                      return (
+                        <Circle key={n.id} x={p.x} y={p.y} radius={11} fill={colors.typeColor(n.type)} />
+                      );
+                    })}
+                    {data.nodes.map((n) => {
+                      const p = pos.get(n.id)!;
+                      return (
+                        <Text key={`${n.id}-t`} x={p.x + 14} y={p.y - 6}
+                          text={n.label ?? n.type} fontSize={11} fill={colors.label} />
+                      );
+                    })}
+                  </>
+                );
+              })()}
+            </Layer>
+          </Stage>
+        </div>
+      )}
+      {data && data.edges.length === 0 && (
+        <p className="hint">
+          No relationships yet — these are inferred from classified symbols (enable OCR so symbols
+          get labelled &amp; classified), or add edges via the API.
+        </p>
+      )}
     </div>
   );
 }

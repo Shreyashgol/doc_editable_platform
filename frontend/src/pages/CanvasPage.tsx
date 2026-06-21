@@ -1,26 +1,26 @@
 import Konva from "konva";
 import { useEffect, useRef } from "react";
 import { Layer, Rect, Stage, Text, Transformer } from "react-konva";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
+import { StatusBadge } from "@/components/StatusBadge";
 import { useDocumentStatus, useEditSymbol, useSymbols } from "@/api/hooks";
+import { useThemeColors } from "@/hooks/useThemeColors";
 import { useCanvas } from "@/store/canvas";
 import type { SymbolResponse } from "@/types/api";
 import { PropertyEditor } from "./PropertyEditor";
 
-const TYPE_COLOR: Record<string, string> = {
-  Valve: "#2980b9", Pump: "#27ae60", PressureVessel: "#8e44ad",
-  HeatExchanger: "#d35400", PressureTransmitter: "#16a085", Controller: "#c0392b",
-  Unknown: "#7f8c8d",
-};
-
 function SymbolShape({
   symbol,
   selected,
+  color,
+  labelColor,
   onSelect,
   onChange,
 }: {
   symbol: SymbolResponse;
   selected: boolean;
+  color: string;
+  labelColor: string;
   onSelect: (additive: boolean) => void;
   onChange: (patch: Record<string, unknown>) => void;
 }) {
@@ -43,9 +43,10 @@ function SymbolShape({
         width={symbol.bbox.width}
         height={symbol.bbox.height}
         rotation={symbol.rotation}
-        stroke={TYPE_COLOR[symbol.type] ?? "#333"}
-        strokeWidth={2}
-        fill={`${TYPE_COLOR[symbol.type] ?? "#333"}22`}
+        stroke={color}
+        strokeWidth={selected ? 3 : 2}
+        cornerRadius={3}
+        fill={`${color}22`}
         draggable
         onClick={(e) => onSelect(e.evt.shiftKey)}
         onTap={() => onSelect(false)}
@@ -69,12 +70,15 @@ function SymbolShape({
       />
       <Text
         x={symbol.bbox.x}
-        y={symbol.bbox.y - 14}
+        y={symbol.bbox.y - 15}
         text={symbol.label ?? symbol.type}
         fontSize={12}
-        fill="#222"
+        fontStyle="bold"
+        fill={labelColor}
       />
-      {selected && <Transformer ref={trRef} rotateEnabled keepRatio={false} />}
+      {selected && (
+        <Transformer ref={trRef} rotateEnabled keepRatio={false} anchorSize={8} borderStroke={color} />
+      )}
     </>
   );
 }
@@ -84,57 +88,73 @@ export function CanvasPage() {
   const { data: symbols } = useSymbols(id);
   const { data: status } = useDocumentStatus(id);
   const edit = useEditSymbol(id);
+  const colors = useThemeColors();
   const { selectedIds, select, clearSelection, scale, setScale, position, setPosition } =
     useCanvas();
 
   const onWheel = (e: Konva.KonvaEventObject<WheelEvent>) => {
     e.evt.preventDefault();
-    const direction = e.evt.deltaY > 0 ? 0.92 : 1.08;
-    setScale(scale * direction);
+    setScale(scale * (e.evt.deltaY > 0 ? 0.92 : 1.08));
   };
 
   const selectedSymbol = symbols?.find((s) => selectedIds.has(s.id)) ?? null;
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 280px", gap: 12 }}>
-      <div>
-        <p>
-          Status: <strong>{status?.status ?? "…"}</strong>
-          {status?.job && ` — ${status.job.stage} (${status.job.stage_status})`}
-        </p>
-        <div style={{ border: "1px solid #ccc" }}>
-          <Stage
-            width={900}
-            height={620}
-            scaleX={scale}
-            scaleY={scale}
-            x={position.x}
-            y={position.y}
-            draggable
-            onWheel={onWheel}
-            onDragEnd={(e) => setPosition({ x: e.target.x(), y: e.target.y() })}
-            onMouseDown={(e) => {
-              if (e.target === e.target.getStage()) clearSelection();
-            }}
-          >
-            <Layer>
-              {symbols?.map((s) => (
-                <SymbolShape
-                  key={s.id}
-                  symbol={s}
-                  selected={selectedIds.has(s.id)}
-                  onSelect={(additive) => select(s.id, additive)}
-                  onChange={(patch) => edit.mutate({ id: s.id, patch })}
-                />
-              ))}
-            </Layer>
-          </Stage>
+    <div>
+      <div className="page-title">
+        <div className="row">
+          <Link className="btn btn--ghost" to="/">← Documents</Link>
+          <h2 style={{ margin: 0 }}>Symbol canvas</h2>
         </div>
-        <p style={{ color: "#777", fontSize: 12 }}>
-          Scroll to zoom · drag background to pan · shift-click to multi-select · drag/resize/rotate a symbol to edit (saved as a new version).
-        </p>
+        <div className="row">
+          {status && <StatusBadge status={status.status} />}
+          {status?.job && (
+            <span className="hint">{status.job.stage} · {status.job.stage_status}</span>
+          )}
+          <Link className="btn btn--ghost" to={`/documents/${id}/graph`}>View graph →</Link>
+        </div>
       </div>
-      <PropertyEditor symbol={selectedSymbol} />
+
+      <div className="split">
+        <div className="stack">
+          <div className="canvas-frame">
+            <Stage
+              width={880}
+              height={620}
+              scaleX={scale}
+              scaleY={scale}
+              x={position.x}
+              y={position.y}
+              draggable
+              onWheel={onWheel}
+              onDragEnd={(e) => setPosition({ x: e.target.x(), y: e.target.y() })}
+              onMouseDown={(e) => {
+                if (e.target === e.target.getStage()) clearSelection();
+              }}
+              style={{ background: colors.bg }}
+            >
+              <Layer>
+                {symbols?.map((s) => (
+                  <SymbolShape
+                    key={s.id}
+                    symbol={s}
+                    selected={selectedIds.has(s.id)}
+                    color={colors.typeColor(s.type)}
+                    labelColor={colors.label}
+                    onSelect={(additive) => select(s.id, additive)}
+                    onChange={(patch) => edit.mutate({ id: s.id, patch })}
+                  />
+                ))}
+              </Layer>
+            </Stage>
+          </div>
+          <p className="hint">
+            Scroll to zoom · drag background to pan · shift-click to multi-select · drag / resize /
+            rotate a symbol to edit (saved as a new version).
+          </p>
+        </div>
+        <PropertyEditor symbol={selectedSymbol} typeColor={colors.typeColor} />
+      </div>
     </div>
   );
 }

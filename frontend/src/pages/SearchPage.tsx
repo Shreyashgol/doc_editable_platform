@@ -4,14 +4,14 @@ import type { SearchHit } from "@/types/api";
 
 export function SearchPage() {
   const [text, setText] = useState("");
-  const [hits, setHits] = useState<SearchHit[]>([]);
+  const [hits, setHits] = useState<SearchHit[] | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function run() {
+    if (!text) return;
     setLoading(true);
     try {
-      const res = await api.searchSimilar({ text, top_k: 20 });
-      setHits(res.hits);
+      setHits((await api.searchSimilar({ text, top_k: 20 })).hits);
     } finally {
       setLoading(false);
     }
@@ -19,29 +19,48 @@ export function SearchPage() {
 
   return (
     <div>
-      <h2>Semantic search</h2>
-      <p style={{ color: "#777" }}>
-        Cross-modal text → symbol search over the vector index (foundation for RAG).
-      </p>
-      <div style={{ display: "flex", gap: 8 }}>
-        <input
-          style={{ flex: 1 }}
-          placeholder="e.g. pressure transmitter"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && run()}
-        />
-        <button onClick={run} disabled={!text || loading}>{loading ? "…" : "Search"}</button>
+      <div className="page-title"><h2>Semantic search</h2></div>
+      <div className="card stack">
+        <p className="text-secondary" style={{ margin: 0 }}>
+          Cross-modal text → symbol search over the pgvector index (foundation for RAG).
+        </p>
+        <div className="row">
+          <input
+            className="input"
+            placeholder="e.g. pressure transmitter"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && run()}
+          />
+          <button className="btn btn--primary" onClick={run} disabled={!text || loading}>
+            {loading ? "…" : "Search"}
+          </button>
+        </div>
       </div>
-      <ul>
-        {hits.map((h) => (
-          <li key={h.symbol.id}>
-            <strong>{h.symbol.label ?? h.symbol.type}</strong> ({h.symbol.type}) — score{" "}
-            {h.score.toFixed(3)} · page {h.symbol.page_number}
-          </li>
-        ))}
-      </ul>
-      {hits.length === 0 && !loading && <p style={{ color: "#777" }}>No results yet.</p>}
+
+      {hits && (
+        <div className="card card--pad-0" style={{ marginTop: 16 }}>
+          {hits.length === 0 ? (
+            <p className="muted" style={{ padding: 20 }}>No matching symbols.</p>
+          ) : (
+            <table className="table">
+              <thead>
+                <tr><th>Symbol</th><th>Type</th><th>Page</th><th>Score</th></tr>
+              </thead>
+              <tbody>
+                {hits.map((h) => (
+                  <tr key={h.symbol.id}>
+                    <td style={{ fontWeight: 500 }}>{h.symbol.label ?? "—"}</td>
+                    <td>{h.symbol.type}</td>
+                    <td>{h.symbol.page_number}</td>
+                    <td className="text-secondary">{h.score.toFixed(3)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
     </div>
   );
 }

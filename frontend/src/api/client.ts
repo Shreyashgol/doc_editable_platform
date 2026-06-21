@@ -10,7 +10,10 @@ import type {
   TokenResponse,
 } from "@/types/api";
 
-export const http = axios.create({ baseURL: "/" });
+// In dev the Vite proxy serves "/api" from the local backend; in production set
+// VITE_API_BASE_URL to the deployed API origin (e.g. https://docai-api.onrender.com).
+const baseURL = import.meta.env.VITE_API_BASE_URL ?? "/";
+export const http = axios.create({ baseURL });
 
 // Attach the bearer token to every request.
 http.interceptors.request.use((config) => {
