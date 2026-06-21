@@ -68,6 +68,10 @@ class Settings(BaseSettings):
     queue_poll_interval_seconds: float = 1.0
     queue_batch_size: int = 5
     worker_concurrency: int = 4
+    # Run the pipeline worker loop inside the API process (single-service free deploys).
+    # Default off — production runs a dedicated worker. Safe with N API replicas because the
+    # queue uses FOR UPDATE SKIP LOCKED (replicas claim disjoint tasks).
+    run_worker_in_process: bool = False
 
     # --- Object storage ---
     # "postgres" (default) = store blobs in the DB — single-datastore deploys need only Neon,
