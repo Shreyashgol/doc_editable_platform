@@ -11,6 +11,7 @@ dependencies = [
     "gunicorn>=22.0",
     "pydantic>=2.7",
     "pydantic-settings>=2.3",
+    "email-validator>=2.0",  # required by EmailStr in the auth schemas
     "sqlalchemy[asyncio]>=2.0.30",
     "alembic>=1.13",
     "asyncpg>=0.29",
