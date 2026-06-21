@@ -11,6 +11,9 @@ from ...application.security import Principal
 from ...application.services.auth_service import AuthService
 from ...application.services.document_service import DocumentService
 from ...application.services.file_validation import FileValidator
+from ...application.services.graph_service import GraphService
+from ...application.services.search_service import SearchService
+from ...application.services.symbol_service import SymbolService
 from ...core.container import Container
 from ...core.errors import AuthenticationError
 from ...domain.enums import Role
@@ -49,3 +52,15 @@ def get_document_service(container: Container = Depends(get_container)) -> Docum
         virus_scanner=container.virus_scanner,
         settings=container.settings,
     )
+
+
+def get_symbol_service(container: Container = Depends(get_container)) -> SymbolService:
+    return SymbolService(container.make_uow())
+
+
+def get_graph_service(container: Container = Depends(get_container)) -> GraphService:
+    return GraphService(container.make_uow())
+
+
+def get_search_service(container: Container = Depends(get_container)) -> SearchService:
+    return SearchService(container.make_uow(), container.embedder)

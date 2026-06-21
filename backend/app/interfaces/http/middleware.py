@@ -75,6 +75,11 @@ def register_exception_handlers(app: FastAPI) -> None:
                         "an unexpected error occurred", cid)
 
 
-def register_middleware(app: FastAPI) -> None:
+def register_middleware(app: FastAPI, settings) -> None:  # type: ignore[no-untyped-def]
+    # Added inner-first: execution order is CorrelationId (outermost) -> SecureHeaders ->
+    # RateLimit -> Metrics (innermost), so a rate-limited response still carries a correlation id.
+    from .rate_limit import RateLimitMiddleware
+
+    app.add_middleware(RateLimitMiddleware, settings=settings)
     app.add_middleware(SecureHeadersMiddleware)
     app.add_middleware(CorrelationIdMiddleware)

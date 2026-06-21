@@ -12,8 +12,9 @@ from fastapi import FastAPI
 from ...core.config import Settings, get_settings
 from ...core.container import Container
 from ...core.logging import configure_logging
+from .metrics import register_metrics
 from .middleware import register_exception_handlers, register_middleware
-from .routers import auth, documents, health
+from .routers import auth, documents, graph, health, search, symbols
 
 
 def create_app(*, settings: Settings | None = None, container: Container | None = None) -> FastAPI:
@@ -34,11 +35,17 @@ def create_app(*, settings: Settings | None = None, container: Container | None 
         openapi_url="/openapi.json",
     )
 
-    register_middleware(app)
+    register_metrics(app)
+    register_middleware(app, settings)
     register_exception_handlers(app)
 
     prefix = settings.api_v1_prefix
     app.include_router(auth.router, prefix=prefix)
     app.include_router(documents.router, prefix=prefix)
+    app.include_router(symbols.documents_router, prefix=prefix)
+    app.include_router(symbols.router, prefix=prefix)
+    app.include_router(graph.documents_router, prefix=prefix)
+    app.include_router(graph.router, prefix=prefix)
+    app.include_router(search.router, prefix=prefix)
     app.include_router(health.router)
     return app

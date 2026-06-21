@@ -109,9 +109,12 @@ class SymbolRepository(ABC):
         *,
         top_k: int = 10,
         document_id: UUID | None = None,
+        owner_id: UUID | None = None,
         symbol_type: str | None = None,
     ) -> list[tuple[Symbol, float]]:
-        """Return (symbol, similarity_score) ordered by score desc. Hides the vector backend."""
+        """Return (symbol, similarity_score) ordered by score desc. Hides the vector backend.
+
+        ``owner_id`` scopes the search to one user's documents (authorization)."""
         ...
 
 
@@ -129,6 +132,9 @@ class RelationshipRepository(ABC):
 
     @abstractmethod
     async def delete_by_document(self, document_id: UUID) -> None: ...
+
+    @abstractmethod
+    async def get(self, relationship_id: UUID) -> Relationship | None: ...
 
     @abstractmethod
     async def list_by_document(self, document_id: UUID) -> list[Relationship]: ...

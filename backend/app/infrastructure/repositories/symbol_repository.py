@@ -9,7 +9,13 @@ from sqlalchemy.orm import selectinload
 from ...domain.entities import Symbol, SymbolProperty, SymbolVersion
 from ...domain.ports import SymbolRepository
 from ..db import mappers
-from ..db.models import EmbeddingModel, SymbolModel, SymbolPropertyModel, SymbolVersionModel
+from ..db.models import (
+    DocumentModel,
+    EmbeddingModel,
+    SymbolModel,
+    SymbolPropertyModel,
+    SymbolVersionModel,
+)
 
 
 class SqlAlchemySymbolRepository(SymbolRepository):
@@ -113,6 +119,7 @@ class SqlAlchemySymbolRepository(SymbolRepository):
         *,
         top_k: int = 10,
         document_id: UUID | None = None,
+        owner_id: UUID | None = None,
         symbol_type: str | None = None,
     ) -> list[tuple[Symbol, float]]:
         distance = EmbeddingModel.embedding.cosine_distance(vector).label("distance")
@@ -123,6 +130,10 @@ class SqlAlchemySymbolRepository(SymbolRepository):
         )
         if document_id is not None:
             stmt = stmt.where(SymbolModel.document_id == document_id)
+        if owner_id is not None:
+            stmt = stmt.join(DocumentModel, DocumentModel.id == SymbolModel.document_id).where(
+                DocumentModel.owner_id == owner_id
+            )
         if symbol_type is not None:
             stmt = stmt.where(SymbolModel.type == symbol_type)
         stmt = stmt.order_by(distance).limit(top_k)

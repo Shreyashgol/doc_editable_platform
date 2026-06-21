@@ -39,6 +39,10 @@ class SqlAlchemyRelationshipRepository(RelationshipRepository):
         )
         await self._session.flush()
 
+    async def get(self, relationship_id: UUID) -> Relationship | None:
+        row = await self._session.get(RelationshipModel, relationship_id)
+        return mappers.relationship_to_domain(row) if row else None
+
     async def list_by_document(self, document_id: UUID) -> list[Relationship]:
         stmt = select(RelationshipModel).where(RelationshipModel.document_id == document_id)
         rows = (await self._session.execute(stmt)).scalars().all()

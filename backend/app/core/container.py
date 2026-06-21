@@ -10,9 +10,10 @@ from __future__ import annotations
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from ..application.unit_of_work import UnitOfWork
-from ..domain.ports import ObjectStore, VirusScanner
+from ..domain.ports import Embedder, ObjectStore, VirusScanner
 from ..infrastructure.db.base import create_engine_and_sessionmaker
 from ..infrastructure.db.unit_of_work import SqlAlchemyUnitOfWork
+from ..infrastructure.factories import build_embedder
 from ..infrastructure.security.clamav import ClamAVScanner, NullVirusScanner
 from ..infrastructure.security.jwt import JwtService
 from ..infrastructure.storage.s3 import InMemoryObjectStore, S3ObjectStore
@@ -26,6 +27,7 @@ class Container:
         *,
         object_store: ObjectStore | None = None,
         virus_scanner: VirusScanner | None = None,
+        embedder: Embedder | None = None,
         engine: AsyncEngine | None = None,
         session_factory: async_sessionmaker[AsyncSession] | None = None,
     ) -> None:
@@ -37,6 +39,8 @@ class Container:
         self.jwt = JwtService(settings)
         self.object_store: ObjectStore = object_store or self._default_object_store(settings)
         self.virus_scanner: VirusScanner = virus_scanner or self._default_scanner(settings)
+        # Must match the worker's embedder so query vectors share the stored vectors' space.
+        self.embedder: Embedder = embedder or build_embedder(settings)
 
     @staticmethod
     def _default_object_store(settings: Settings) -> ObjectStore:
