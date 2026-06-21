@@ -52,6 +52,10 @@ class Settings(BaseSettings):
     )
     db_pool_size: int = 10
     db_max_overflow: int = 20
+    # Neon (and most managed PG) require TLS. Neon's pooled endpoint runs PgBouncer in
+    # transaction mode, which is incompatible with asyncpg prepared-statement caching, so we
+    # disable it when SSL/pooling is in play. Set APP_DB_REQUIRE_SSL=true for Neon.
+    db_require_ssl: bool = False
 
     # --- Redis / Celery ---
     redis_url: RedisDsn = Field(default="redis://localhost:6379/0")  # type: ignore[arg-type]
