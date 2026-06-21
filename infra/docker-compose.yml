@@ -8,10 +8,7 @@ x-app-env: &app-env
   APP_JWT_SECRET: ${APP_JWT_SECRET:-local-dev-secret-change-me}
   APP_DATABASE_URL: ${APP_DATABASE_URL:-postgresql+asyncpg://docai:docai@postgres:5432/docai}
   APP_DATABASE_SYNC_URL: ${APP_DATABASE_SYNC_URL:-postgresql+psycopg://docai:docai@postgres:5432/docai}
-  APP_S3_ENDPOINT_URL: http://minio:9000
-  APP_S3_ACCESS_KEY: ${APP_S3_ACCESS_KEY:-minioadmin}
-  APP_S3_SECRET_KEY: ${APP_S3_SECRET_KEY:-minioadmin}
-  APP_S3_BUCKET: documents
+  APP_OBJECT_STORE_BACKEND: ${APP_OBJECT_STORE_BACKEND:-postgres}
   APP_CLAMAV_ENABLED: ${APP_CLAMAV_ENABLED:-true}
   APP_CLAMAV_HOST: clamav
   APP_OCR_BACKEND: ${APP_OCR_BACKEND:-none}
@@ -31,29 +28,6 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
-
-  minio:
-    image: minio/minio:latest
-    command: server /data --console-address ":9001"
-    environment:
-      MINIO_ROOT_USER: ${APP_S3_ACCESS_KEY:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${APP_S3_SECRET_KEY:-minioadmin}
-    ports: ["9000:9000", "9001:9001"]
-    volumes: ["minio-data:/data"]
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-
-  createbuckets:
-    image: minio/mc:latest
-    depends_on:
-      minio: {condition: service_healthy}
-    entrypoint: >
-      /bin/sh -c "
-      mc alias set local http://minio:9000 ${APP_S3_ACCESS_KEY:-minioadmin} ${APP_S3_SECRET_KEY:-minioadmin} &&
-      mc mb -p local/documents || true"
 
   clamav:
     image: clamav/clamav:latest
@@ -78,7 +52,6 @@ services:
     ports: ["8000:8000"]
     depends_on:
       postgres: {condition: service_healthy}
-      minio: {condition: service_healthy}
       migrate: {condition: service_completed_successfully}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health/ready"]
@@ -92,7 +65,6 @@ services:
     environment: *app-env
     depends_on:
       postgres: {condition: service_healthy}
-      minio: {condition: service_healthy}
       migrate: {condition: service_completed_successfully}
     deploy:
       replicas: 2
@@ -111,4 +83,3 @@ services:
 
 volumes:
   postgres-data:
-  minio-data:

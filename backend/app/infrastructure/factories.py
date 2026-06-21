@@ -15,7 +15,13 @@ from .storage.s3 import InMemoryObjectStore, S3ObjectStore
 
 
 def build_object_store(settings: Settings) -> ObjectStore:
-    if settings.environment == "test" or settings.s3_endpoint_url is None:
+    if settings.environment == "test":
+        return InMemoryObjectStore()
+    if settings.object_store_backend == "postgres":
+        from .storage.postgres_store import PostgresObjectStore
+
+        return PostgresObjectStore(settings)
+    if settings.s3_endpoint_url is None:
         return InMemoryObjectStore()
     return S3ObjectStore(settings)
 

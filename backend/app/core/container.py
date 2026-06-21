@@ -13,10 +13,9 @@ from ..application.unit_of_work import UnitOfWork
 from ..domain.ports import Embedder, ObjectStore, VirusScanner
 from ..infrastructure.db.base import create_engine_and_sessionmaker
 from ..infrastructure.db.unit_of_work import SqlAlchemyUnitOfWork
-from ..infrastructure.factories import build_embedder
+from ..infrastructure.factories import build_embedder, build_object_store
 from ..infrastructure.security.clamav import ClamAVScanner, NullVirusScanner
 from ..infrastructure.security.jwt import JwtService
-from ..infrastructure.storage.s3 import InMemoryObjectStore, S3ObjectStore
 from .config import Settings
 
 
@@ -44,9 +43,8 @@ class Container:
 
     @staticmethod
     def _default_object_store(settings: Settings) -> ObjectStore:
-        if settings.environment == "test" or settings.s3_endpoint_url is None:
-            return InMemoryObjectStore()
-        return S3ObjectStore(settings)
+        # Single source of truth for store selection (s3 | postgres | in-memory for tests).
+        return build_object_store(settings)
 
     @staticmethod
     def _default_scanner(settings: Settings) -> VirusScanner:

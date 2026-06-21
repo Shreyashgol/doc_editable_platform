@@ -1,6 +1,7 @@
-# Render Blueprint: deploy the API (web) + worker (background) from the backend Dockerfile.
-# DB stays on Neon; object storage is an external S3-compatible bucket (e.g. Cloudflare R2).
-# Create the blueprint in Render → "New +" → "Blueprint" and point it at this repo.
+# Render Blueprint: API (web) + worker (background) from the backend Dockerfile.
+# Single datastore: Neon Postgres holds metadata, the job queue, AND object blobs
+# (APP_OBJECT_STORE_BACKEND=postgres) — no MinIO/S3 to provision.
+# Create in Render → "New +" → "Blueprint", pointed at this repo.
 services:
   - type: web
     name: docai-api
@@ -9,34 +10,27 @@ services:
     dockerfilePath: ./Dockerfile
     plan: starter
     healthCheckPath: /health/ready
-    # Run migrations before each deploy goes live.
-    preDeployCommand: alembic upgrade head
+    preDeployCommand: alembic upgrade head # run migrations before each deploy goes live
     envVars:
       - key: APP_ENVIRONMENT
         value: production
-      - key: APP_JWT_SECRET
-        generateValue: true
+      - key: APP_OBJECT_STORE_BACKEND
+        value: postgres
       - key: APP_DB_REQUIRE_SSL
         value: "true"
       - key: APP_CLAMAV_ENABLED
         value: "false" # set true + run a clamav service to enable AV scanning
       - key: APP_OCR_BACKEND
-        value: none # set "paddle" only on an image built with INSTALL_ML=true
+        value: none # "paddle" only on an image built with INSTALL_ML=true
       - key: APP_EMBEDDING_BACKEND
-        value: hash # set "openclip" only on an ML image; must match the worker
-      # --- secrets / connection strings: set these in the Render dashboard ---
+        value: hash # "openclip" only on an ML image; must match the worker
+      - key: APP_JWT_SECRET
+        generateValue: true
+      # --- secrets: set in the Render dashboard ---
       - key: APP_DATABASE_URL # postgresql+asyncpg://USER:PASS@HOST/db  (Neon pooled)
         sync: false
       - key: APP_DATABASE_SYNC_URL # postgresql+psycopg://USER:PASS@HOST/db?sslmode=require
         sync: false
-      - key: APP_S3_ENDPOINT_URL # e.g. https://<accountid>.r2.cloudflarestorage.com
-        sync: false
-      - key: APP_S3_ACCESS_KEY
-        sync: false
-      - key: APP_S3_SECRET_KEY
-        sync: false
-      - key: APP_S3_BUCKET
-        value: documents
       - key: APP_CORS_ALLOW_ORIGINS # your Vercel URL, e.g. https://docai.vercel.app
         sync: false
 
@@ -48,9 +42,10 @@ services:
     plan: starter
     dockerCommand: python -m app.interfaces.worker.run
     envVars:
-      # Reuse the same values as the API (Render lets you copy from a group or re-enter).
       - key: APP_ENVIRONMENT
         value: production
+      - key: APP_OBJECT_STORE_BACKEND
+        value: postgres
       - key: APP_DB_REQUIRE_SSL
         value: "true"
       - key: APP_OCR_BACKEND
@@ -63,11 +58,3 @@ services:
         sync: false
       - key: APP_DATABASE_SYNC_URL
         sync: false
-      - key: APP_S3_ENDPOINT_URL
-        sync: false
-      - key: APP_S3_ACCESS_KEY
-        sync: false
-      - key: APP_S3_SECRET_KEY
-        sync: false
-      - key: APP_S3_BUCKET
-        value: documents

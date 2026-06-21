@@ -69,7 +69,11 @@ class Settings(BaseSettings):
     queue_batch_size: int = 5
     worker_concurrency: int = 4
 
-    # --- Object storage (MinIO / S3) ---
+    # --- Object storage ---
+    # "postgres" (default) = store blobs in the DB — single-datastore deploys need only Neon,
+    # no object store to provision. "s3" = MinIO/S3/GCS/R2 (any S3-compatible endpoint) for
+    # object storage at scale.
+    object_store_backend: Literal["s3", "postgres"] = "postgres"
     s3_endpoint_url: str | None = "http://localhost:9000"
     s3_region: str = "us-east-1"
     s3_access_key: str = "minioadmin"

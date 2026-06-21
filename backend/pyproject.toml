@@ -26,19 +26,21 @@ dependencies = [
     "opentelemetry-sdk>=1.25",
     "opentelemetry-instrumentation-fastapi>=0.46b0",
     "httpx>=0.27",
+    # Core CV stack — the worker needs these for PDF render + symbol extraction even with the
+    # default (no-OCR, hash-embedding) backends. The heavy ML models stay optional in `ml`.
+    "pymupdf>=1.24",
+    "opencv-python-headless>=4.9",
+    "pillow>=10.3",
+    "numpy>=1.26",
 ]
 
 [project.optional-dependencies]
-# Heavy ML/CV deps isolated so the domain/app layers and their tests install fast.
+# Heavy ML models — only needed for paddle OCR / OpenCLIP embeddings (set the matching backends).
 ml = [
-    "pymupdf>=1.24",
-    "opencv-python-headless>=4.9",
     "paddleocr>=2.7",
     "paddlepaddle>=2.6",
     "open-clip-torch>=2.24",
     "torch>=2.2",
-    "pillow>=10.3",
-    "numpy>=1.26",
 ]
 dev = [
     "pytest>=8.2",
