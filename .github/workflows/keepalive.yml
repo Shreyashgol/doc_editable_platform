@@ -1,0 +1,29 @@
+name: keep-alive
+
+# Pings the deployed backend so a Render Free instance doesn't idle-sleep (15 min).
+# Repo-native backup to the external UptimeRobot monitor. Override the target without
+# editing this file via repo variable HEALTHCHECK_URL (Settings → Secrets and variables → Actions).
+#
+# Note: GitHub disables scheduled workflows after ~60 days of repo inactivity, and cron
+# timing is best-effort — keep an external monitor as the primary keep-alive.
+on:
+  schedule:
+    - cron: "*/10 * * * *" # every 10 minutes
+  workflow_dispatch: {}
+
+concurrency:
+  group: keepalive
+  cancel-in-progress: true
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping /health/live
+        env:
+          URL: ${{ vars.HEALTHCHECK_URL || 'https://doc-editable-platform.onrender.com/health/live' }}
+        run: |
+          code=$(curl -fsS --retry 3 --retry-all-errors --max-time 90 \
+                   -o /dev/null -w '%{http_code}' "$URL")
+          echo "GET $URL -> $code"
+          test "$code" = "200"

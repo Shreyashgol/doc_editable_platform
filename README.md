@@ -57,7 +57,7 @@ APP_CLAMAV_ENABLED=true docker compose --profile security up --build   # + ClamA
 | Surface | URL |
 |---------|-----|
 | **Frontend (Vercel)** | **https://doc-editable-platform.vercel.app** |
-| API + OpenAPI docs (Render) | `https://<your-api>.onrender.com/docs` |
+| API + OpenAPI docs (Render) | `https://doc-editable-platform.onrender.com/docs` |
 
 > _Replace the placeholders with your deployed URLs._ The backend runs on Render (API + in-process
 > worker in a single free service), the database/queue/blob-store on Neon Postgres, and the SPA on

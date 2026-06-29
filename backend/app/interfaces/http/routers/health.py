@@ -8,12 +8,13 @@ from ..schemas.common import HealthResponse
 router = APIRouter(tags=["health"])
 
 
-@router.get("/health/live", response_model=HealthResponse)
+# GET + HEAD so uptime monitors / load balancers that probe with HEAD don't get a 405.
+@router.api_route("/health/live", methods=["GET", "HEAD"], response_model=HealthResponse)
 async def liveness() -> HealthResponse:
     return HealthResponse(status="ok")
 
 
-@router.get("/health/ready", response_model=HealthResponse)
+@router.api_route("/health/ready", methods=["GET", "HEAD"], response_model=HealthResponse)
 async def readiness(request: Request, response: Response) -> HealthResponse:
     container = request.app.state.container
     checks: dict[str, str] = {}
