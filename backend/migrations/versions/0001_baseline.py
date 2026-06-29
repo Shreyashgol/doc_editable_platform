@@ -35,7 +35,10 @@ _TIMESTAMPED_TABLES = [
 def upgrade() -> None:
     op.execute("CREATE EXTENSION IF NOT EXISTS vector")
     bind = op.get_bind()
-    Base.metadata.create_all(bind=bind)
+    # `pipeline_tasks` is defined in the ORM metadata but is owned by migration 0002 (ADR 0005),
+    # so exclude it here — otherwise create_all and 0002 both create it and a fresh DB collides.
+    baseline_tables = [t for t in Base.metadata.sorted_tables if t.name != "pipeline_tasks"]
+    Base.metadata.create_all(bind=bind, tables=baseline_tables)
 
     # Approximate-NN index for similarity search (cosine).
     op.execute(

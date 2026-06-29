@@ -1,0 +1,6 @@
+# Root convenience entrypoint so `docker compose up --build` Just Works from the repo root.
+# The real stack definition lives in infra/docker-compose.yml (Postgres+pgvector, auto-migrate,
+# API, workers, Prometheus, Grafana). No Redis, no Celery, no MinIO — the job queue and the blob
+# store both live in Postgres (see docs/adr/0005-postgres-job-queue-supersedes-celery.md).
+include:
+  - infra/docker-compose.yml

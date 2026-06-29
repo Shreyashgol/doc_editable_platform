@@ -8,13 +8,47 @@ Upload a P&ID / schematic / flowchart → the platform extracts every symbol, re
 classifies it, embeds it for semantic search, links it into a relationship graph, and lets you
 edit it on a canvas — each symbol a structured domain object, never "just an image".
 
-[Architecture](#-architecture) · [How it works](#-how-it-works) · [Run locally](#-run-locally) ·
-[Deploy](#-deployment) · [Design docs](#-design-documentation)
+[Quickstart](#-quickstart-one-command) · [Architecture](#-architecture) · [How it works](#-how-it-works) ·
+[Run locally](#-run-locally) · [Deploy](#-deployment) · [Design docs](#-design-documentation)
 
 `Python 3.12` · `FastAPI` · `SQLAlchemy 2` · `PostgreSQL + pgvector` · `PyMuPDF` · `OpenCV` ·
 `OpenCLIP` · `React` · `TypeScript` · `Konva`
 
 </div>
+
+---
+
+## ⚡ Quickstart (one command)
+
+**Only Docker is required.** No local Python/Node/Postgres setup, and **no Redis, Celery, MinIO or
+S3** — the job queue and the blob store both live inside Postgres (see
+[ADR&nbsp;0005](docs/adr/0005-postgres-job-queue-supersedes-celery.md)).
+
+```bash
+docker compose up --build         # or: make up
+```
+
+This builds and starts the core stack — Postgres + pgvector, **auto-runs the DB migrations**, the
+API and two background workers — and comes up on any architecture (Apple Silicon included):
+
+| Service | URL |
+|---------|-----|
+| **API + Swagger / OpenAPI docs** | http://localhost:8000/docs |
+| Health probe | http://localhost:8000/health/ready |
+
+Then: **register → upload a PDF → watch it reach `COMPLETED` → edit symbols on the canvas → try
+semantic search.** Run the frontend dev server (below) for the full UI, or drive the API directly
+from the Swagger page. Tear down with `make down` (or `make reset` to wipe the database).
+
+**Optional add-ons** (Compose profiles — opt-in so the default stays lean and fast):
+
+```bash
+docker compose --profile monitoring up --build           # + Prometheus :9090 and Grafana :3000 (admin/admin)
+APP_CLAMAV_ENABLED=true docker compose --profile security up --build   # + ClamAV upload scanning
+```
+
+> Compose file lives at [`docker-compose.yml`](docker-compose.yml) (a thin root entrypoint that
+> includes [`infra/docker-compose.yml`](infra/docker-compose.yml)).
 
 ---
 
@@ -281,8 +315,8 @@ npm run dev                          # http://localhost:5173 (proxies /api to :8
 Register → upload a PDF → watch it march to `COMPLETED` on the dashboard, then edit symbols on the
 canvas and try semantic search.
 
-> Prefer the full stack in containers? `docker compose -f infra/docker-compose.yml up --build`
-> brings up Postgres+pgvector, the API, workers, Prometheus, and Grafana.
+> Prefer the full stack in containers? Just `docker compose up --build` (or `make up`) from the repo
+> root — see [Quickstart](#-quickstart-one-command). No Python/Node toolchain required.
 
 ### Key configuration (`APP_` prefixed env)
 | Var | Default | Purpose |

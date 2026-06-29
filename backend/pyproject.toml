@@ -88,9 +88,9 @@ asyncio_mode = "auto"
 testpaths = ["tests"]
 markers = [
     "unit: pure domain/application unit tests (no I/O)",
-    "integration: requires Postgres/Redis/MinIO",
+    "integration: requires Postgres (pgvector) — queue + blobs live in the DB, no Redis/MinIO",
     "api: exercises the FastAPI app",
-    "worker: exercises Celery tasks",
+    "worker: exercises the in-Postgres job queue worker (no Celery — see ADR 0005)",
     "e2e: full pipeline on a sample PDF (slow)",
 ]
 

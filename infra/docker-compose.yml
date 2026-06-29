@@ -9,7 +9,9 @@ x-app-env: &app-env
   APP_DATABASE_URL: ${APP_DATABASE_URL:-postgresql+asyncpg://docai:docai@postgres:5432/docai}
   APP_DATABASE_SYNC_URL: ${APP_DATABASE_SYNC_URL:-postgresql+psycopg://docai:docai@postgres:5432/docai}
   APP_OBJECT_STORE_BACKEND: ${APP_OBJECT_STORE_BACKEND:-postgres}
-  APP_CLAMAV_ENABLED: ${APP_CLAMAV_ENABLED:-true}
+  # AV scanning is off by default so the stack comes up with one command on any arch.
+  # Turn it on with: docker compose --profile security up  (sets this to true automatically).
+  APP_CLAMAV_ENABLED: ${APP_CLAMAV_ENABLED:-false}
   APP_CLAMAV_HOST: clamav
   APP_OCR_BACKEND: ${APP_OCR_BACKEND:-none}
   APP_EMBEDDING_BACKEND: ${APP_EMBEDDING_BACKEND:-hash}
@@ -21,7 +23,9 @@ services:
       POSTGRES_USER: docai
       POSTGRES_PASSWORD: docai
       POSTGRES_DB: docai
-    ports: ["5432:5432"]
+    # Host port 5433 by default to avoid clashing with a local Postgres on 5432. The app containers
+    # always reach the DB via the internal hostname `postgres:5432`, so this only affects host tools.
+    ports: ["${POSTGRES_PORT:-5433}:5432"]
     volumes: ["postgres-data:/var/lib/postgresql/data"]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U docai"]
@@ -31,6 +35,11 @@ services:
 
   clamav:
     image: clamav/clamav:latest
+    # Opt-in AV scanning. Enable with:
+    #   APP_CLAMAV_ENABLED=true docker compose --profile security up --build
+    # (the env var flips scanning on in the api/worker; no arm64 image, so emulate on Apple Silicon).
+    profiles: ["security"]
+    platform: linux/amd64
     ports: ["3310:3310"]
     healthcheck:
       test: ["CMD", "/bin/sh", "-c", "echo PING | nc -w 5 localhost 3310 | grep -q PONG"]
@@ -69,13 +78,16 @@ services:
     deploy:
       replicas: 2
 
+  # Observability stack — opt-in: `docker compose --profile monitoring up`.
   prometheus:
     image: prom/prometheus:latest
+    profiles: ["monitoring"]
     volumes: ["./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro"]
     ports: ["9090:9090"]
 
   grafana:
     image: grafana/grafana:latest
+    profiles: ["monitoring"]
     environment:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
     ports: ["3000:3000"]
