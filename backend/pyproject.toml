@@ -3,7 +3,6 @@ name = "document-ai-platform"
 version = "0.1.0"
 description = "Production-grade Document AI Platform: extract symbols from PDFs into structured, searchable domain objects."
 requires-python = ">=3.12"
-readme = "../README.md"
 
 dependencies = [
     "fastapi>=0.111",
