@@ -10,7 +10,6 @@ import hashlib
 from uuid import UUID, uuid4
 
 import pytest
-
 from app.application.security import Principal
 from app.application.services.auth_service import AuthService
 from app.application.services.document_service import DocumentService
@@ -61,7 +60,6 @@ from app.domain.ports import (
 )
 from app.domain.value_objects import BBox
 from app.infrastructure.security.jwt import JwtService
-
 
 # ─── In-memory fakes ──────────────────────────────────────────────────────────
 
@@ -357,25 +355,25 @@ _PDF_MAGIC = b"%PDF-1.4 fake content for testing"
 
 
 def _make_document(owner_id: UUID, **overrides) -> Document:
-    defaults = dict(
-        owner_id=owner_id,
-        filename="test.pdf",
-        content_hash=hashlib.sha256(_PDF_MAGIC).hexdigest(),
-        storage_uri="raw/test.pdf",
-        mime_type="application/pdf",
-        size_bytes=len(_PDF_MAGIC),
-    )
+    defaults: dict[str, object] = {
+        "owner_id": owner_id,
+        "filename": "test.pdf",
+        "content_hash": hashlib.sha256(_PDF_MAGIC).hexdigest(),
+        "storage_uri": "raw/test.pdf",
+        "mime_type": "application/pdf",
+        "size_bytes": len(_PDF_MAGIC),
+    }
     defaults.update(overrides)
     return Document(**defaults)
 
 
 def _make_symbol(document_id: UUID, **overrides) -> Symbol:
-    defaults = dict(
-        document_id=document_id,
-        page_number=1,
-        bbox=BBox(10, 20, 30, 40),
-        crop_uri="crops/sym.png",
-    )
+    defaults: dict[str, object] = {
+        "document_id": document_id,
+        "page_number": 1,
+        "bbox": BBox(10, 20, 30, 40),
+        "crop_uri": "crops/sym.png",
+    }
     defaults.update(overrides)
     return Symbol(**defaults)
 
