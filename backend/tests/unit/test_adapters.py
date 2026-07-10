@@ -118,7 +118,15 @@ class _FakeQueue:
     def __init__(self) -> None:
         self.enqueued: list[tuple[UUID, ProcessingStage]] = []
 
-    async def enqueue(self, document_id, stage, *, max_attempts, run_after_seconds=0.0, payload=None):
+    async def enqueue(
+        self,
+        document_id,
+        stage,
+        *,
+        max_attempts,
+        run_after_seconds=0.0,
+        payload=None,
+    ):
         self.enqueued.append((document_id, stage))
 
     async def claim_batch(self, *a, **k):  # pragma: no cover - unused here
