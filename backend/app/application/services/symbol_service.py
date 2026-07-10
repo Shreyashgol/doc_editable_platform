@@ -117,7 +117,10 @@ class SymbolService:
             )
             await self._uow.commit()
             refreshed = await self._uow.symbols.get(symbol.id)
-            assert refreshed is not None
+            if refreshed is None:  # pragma: no cover
+                raise RuntimeError(
+                    f"symbol {symbol.id} vanished after commit"
+                )
             return refreshed
 
     async def list_versions(self, principal: Principal, symbol_id: UUID) -> list[SymbolVersion]:

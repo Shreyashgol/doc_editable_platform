@@ -58,7 +58,10 @@ class SearchService:
         if text is not None:
             return await asyncio.to_thread(self._embedder.embed_text, text)
 
-        assert image_b64 is not None
+        if image_b64 is None:
+            raise ValidationError(
+                "exactly one of symbol_id, text, image_b64 is required"
+            )
         try:
             raw = base64.b64decode(image_b64, validate=True)
         except Exception as exc:

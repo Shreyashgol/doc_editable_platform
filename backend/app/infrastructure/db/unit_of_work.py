@@ -42,14 +42,17 @@ class SqlAlchemyUnitOfWork(UnitOfWork):
             if exc_type is not None:
                 await self.rollback()
         finally:
-            assert self._session is not None
+            if self._session is None:  # pragma: no cover
+                raise RuntimeError("UoW session was never opened")
             await self._session.close()
             self._session = None
 
     async def commit(self) -> None:
-        assert self._session is not None
+        if self._session is None:
+            raise RuntimeError("UoW session was never opened")
         await self._session.commit()
 
     async def rollback(self) -> None:
-        assert self._session is not None
+        if self._session is None:
+            raise RuntimeError("UoW session was never opened")
         await self._session.rollback()
